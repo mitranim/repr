@@ -6,7 +6,7 @@ import (
 	"go/format"
 	"testing"
 
-	"repr/test"
+	"github.com/Mitranim/repr/test"
 )
 
 func ExampleString() {
@@ -60,7 +60,7 @@ func TestSingleLine(t *testing.T) {
 func TestWithoutPackageName(t *testing.T) {
 	conf := Config{
 		PackageMap: map[string]string{
-			"repr/test": "",
+			"github.com/Mitranim/repr/test": "",
 		},
 	}
 	actual := StringC(testStructure, conf)
@@ -74,7 +74,7 @@ func TestSingleLineWithoutPackageName(t *testing.T) {
 	conf := Config{
 		SingleLine: true,
 		PackageMap: map[string]string{
-			"repr/test": "",
+			"github.com/Mitranim/repr/test": "",
 		},
 	}
 	actual := StringC(testStructure, conf)
@@ -87,7 +87,7 @@ func TestSingleLineWithoutPackageName(t *testing.T) {
 func TestRenamed(t *testing.T) {
 	conf := Config{
 		PackageMap: map[string]string{
-			"repr/test": "renamed",
+			"github.com/Mitranim/repr/test": "renamed",
 		},
 	}
 	actual := StringC(testStructure, conf)
@@ -101,7 +101,7 @@ func TestSingleLineRenamed(t *testing.T) {
 	conf := Config{
 		SingleLine: true,
 		PackageMap: map[string]string{
-			"repr/test": "renamed",
+			"github.com/Mitranim/repr/test": "renamed",
 		},
 	}
 	actual := StringC(testStructure, conf)
