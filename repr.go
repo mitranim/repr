@@ -58,6 +58,9 @@ Limitations
 
 Some of these limitations may be lifted in future versions.
 
+	* Fancy types such as "big.Int" or "time.Time" are printed as empty structs;
+	  ideally they would be printed as constructor calls
+
 	* Funcs are treated as nil
 
 	* Chans are treated as nil
