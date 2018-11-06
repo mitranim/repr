@@ -1,1 +1,1 @@
-module github.com/Mitranim/repr
+module github.com/mitranim/repr

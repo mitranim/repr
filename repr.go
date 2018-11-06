@@ -32,7 +32,7 @@ literals. Use "go/format" to fix that, at a 50x performance cost:
 
 	import (
 		"go/format"
-		"github.com/Mitranim/repr"
+		"github.com/mitranim/repr"
 	)
 
 	code := repr.Bytes(someDataStructure)
@@ -88,13 +88,13 @@ Installation
 
 Shell:
 
-	go get -u github.com/Mitranim/repr
+	go get -u github.com/mitranim/repr
 
 Usage
 
 Example:
 
-	import "github.com/Mitranim/repr"
+	import "github.com/mitranim/repr"
 
 	type Data struct {
 		Number int
