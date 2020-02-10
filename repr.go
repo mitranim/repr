@@ -281,6 +281,11 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 	}
 
 	rval := reflect.ValueOf(val)
+	if !rval.IsValid() {
+		out = append(out, "nil"...)
+		return out
+	}
+
 	typ := rval.Type()
 
 	switch typ.Kind() {
