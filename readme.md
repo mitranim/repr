@@ -2,7 +2,7 @@
 
 Prints Go data structures as syntactically valid Go code. Useful for code generation. The name "repr" stands for "representation" and alludes to the Python function with the same name.
 
-Solves a problem unaddressed by https://github.com/davecgh/go-spew/spew and directly competes with https://github.com/shurcooL/go-goon.
+Solves a problem unaddressed by https://github.com/davecgh/go-spew/spew; direct alternative to https://github.com/shurcooL/go-goon.
 
 See godoc at https://godoc.org/github.com/mitranim/repr.
 
@@ -36,7 +36,7 @@ See the API documentation at https://godoc.org/github.com/mitranim/repr.
 
 ## License
 
-https://en.wikipedia.org/wiki/WTFPL
+https://unlicense.org
 
 ## Misc
 

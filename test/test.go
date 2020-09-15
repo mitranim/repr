@@ -1,6 +1,11 @@
 package test
 
-// Excerpt from https://github.com/purelabio/eth/blob/master/abi.go
+/*
+Excerpt from https://github.com/purelabio/eth/blob/master/abi.go
+
+This is a separate package, instead of simply being included in the test file,
+in order to test how the printer handles package names.
+*/
 
 type Abi []AbiMethod
 

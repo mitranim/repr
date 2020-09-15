@@ -75,7 +75,7 @@ Some of these limitations may be lifted in future versions.
 
 	* Enum-style constants are not mapped back to identifers
 
-	* Omits private fields from structs
+	* On structs, only exported fields are included
 
 	* Cyclic structures cause infinite recursion
 
@@ -286,9 +286,9 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 		return out
 	}
 
-	typ := rval.Type()
+	rtype := rval.Type()
 
-	switch typ.Kind() {
+	switch rtype.Kind() {
 	case reflect.Bool:
 		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
 		if rval.Bool() {
@@ -354,7 +354,7 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 		out = appendCastSuffix(out, rval, elideType)
 
 	case reflect.Ptr:
-		switch typ.Elem().Kind() {
+		switch rtype.Elem().Kind() {
 		case reflect.Array, reflect.Slice, reflect.Struct, reflect.Map:
 			if isZeroOrShouldOmit(rval) {
 				out = append(out, "nil"...)
@@ -370,7 +370,7 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 		if !elideType {
 			out = append(out, typeName(rval.Type(), conf.PackageMap)...)
 		}
-		if typ.Elem() == byteType {
+		if rtype.Elem() == byteType {
 			out = appendBytes(out, byteArrayToSlice(rval), conf, indent)
 		} else {
 			out = appendList(out, rval, conf, indent)
@@ -386,7 +386,7 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 			} else {
 				out = append(out, "(nil)"...)
 			}
-		} else if typ.Elem() == byteType {
+		} else if rtype.Elem() == byteType {
 			out = appendBytes(out, rval.Bytes(), conf, indent)
 		} else {
 			out = appendList(out, rval, conf, indent)
@@ -467,22 +467,20 @@ func appendList(out []byte, rval reflect.Value, conf Config, indent int) []byte 
 }
 
 func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byte {
-	typ := rval.Type()
+	rtype := rval.Type()
 
 	if conf.SingleLine {
 		out = append(out, '{')
-		count := rval.NumField()
 		var hasFields bool
 
-		for i := 0; i < count; i++ {
-			field := rval.Field(i)
-			if !conf.ZeroFields && isZeroOrShouldOmit(field) {
+		for i := 0; i < rtype.NumField(); i++ {
+			sfield := rtype.Field(i)
+			if !isSfieldExported(sfield) {
 				continue
 			}
 
-			fieldType := typ.Field(i)
-			// Skip unexported field
-			if fieldType.PkgPath != "" {
+			rfield := rval.Field(i)
+			if !conf.ZeroFields && isZeroOrShouldOmit(rfield) {
 				continue
 			}
 
@@ -491,10 +489,10 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 			}
 			hasFields = true
 
-			out = append(out, fieldType.Name...)
+			out = append(out, sfield.Name...)
 			out = append(out, ':', ' ')
-			elideElemType := isPrimitive(field.Type()) || isNil(field)
-			out = appendAny(out, field.Interface(), conf, elideElemType, 0)
+			elideElemType := isPrimitive(rfield.Type()) || isNil(rfield)
+			out = appendAny(out, rfield.Interface(), conf, elideElemType, 0)
 		}
 		out = append(out, '}')
 		return out
@@ -503,15 +501,14 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 	out = append(out, '{')
 	count := 0
 
-	for i := 0; i < rval.NumField(); i++ {
-		field := rval.Field(i)
-		if !conf.ZeroFields && isZeroOrShouldOmit(field) {
+	for i := 0; i < rtype.NumField(); i++ {
+		sfield := rtype.Field(i)
+		if !isSfieldExported(sfield) {
 			continue
 		}
 
-		fieldType := typ.Field(i)
-		// Skip unexported field
-		if fieldType.PkgPath != "" {
+		rfield := rval.Field(i)
+		if !conf.ZeroFields && isZeroOrShouldOmit(rfield) {
 			continue
 		}
 
@@ -522,10 +519,10 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 		}
 
 		out = appendIndent(out, indent)
-		out = append(out, fieldType.Name...)
+		out = append(out, sfield.Name...)
 		out = append(out, ':', ' ')
-		elideElemType := isPrimitive(field.Type()) || isNil(field)
-		out = appendAny(out, field.Interface(), conf, elideElemType, indent)
+		elideElemType := isPrimitive(rfield.Type()) || isNil(rfield)
+		out = appendAny(out, rfield.Interface(), conf, elideElemType, indent)
 		out = append(out, ',', '\n')
 	}
 
@@ -539,9 +536,9 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 }
 
 func appendMap(out []byte, rval reflect.Value, conf Config, indent int) []byte {
-	typ := rval.Type()
-	keyType := typ.Key()
-	elemType := typ.Elem()
+	rtype := rval.Type()
+	keyType := rtype.Key()
+	elemType := rtype.Elem()
 	elideKeyType := isPrimitive(keyType)
 	elideElemType := isPrimitive(elemType)
 
@@ -724,8 +721,8 @@ func isZeroOrShouldOmit(rval reflect.Value) bool {
 	}
 }
 
-func mayRequireMultiline(typ reflect.Type) bool {
-	switch typ.Kind() {
+func mayRequireMultiline(rtype reflect.Type) bool {
+	switch rtype.Kind() {
 	case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface,
 		reflect.Map, reflect.Slice, reflect.String, reflect.Struct:
 		return true
@@ -734,8 +731,8 @@ func mayRequireMultiline(typ reflect.Type) bool {
 	}
 }
 
-func isPrimitive(typ reflect.Type) bool {
-	switch typ.Kind() {
+func isPrimitive(rtype reflect.Type) bool {
+	switch rtype.Kind() {
 	case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
@@ -759,30 +756,30 @@ func isNil(rval reflect.Value) bool {
 }
 
 // Inefficient, but not a bottleneck. TODO improve.
-func typeName(typ reflect.Type, packageMap map[string]string) string {
-	name := typ.Name()
+func typeName(rtype reflect.Type, packageMap map[string]string) string {
+	name := rtype.Name()
 	if name == "" {
-		switch typ.Kind() {
+		switch rtype.Kind() {
 		case reflect.Array:
-			return "[" + strconv.Itoa(typ.Len()) + "]" + typeName(typ.Elem(), packageMap)
+			return "[" + strconv.Itoa(rtype.Len()) + "]" + typeName(rtype.Elem(), packageMap)
 
 		case reflect.Slice:
-			return "[]" + typeName(typ.Elem(), packageMap)
+			return "[]" + typeName(rtype.Elem(), packageMap)
 
 		case reflect.Map:
-			return "map[" + typeName(typ.Key(), packageMap) + "]" + typeName(typ.Elem(), packageMap)
+			return "map[" + typeName(rtype.Key(), packageMap) + "]" + typeName(rtype.Elem(), packageMap)
 		}
-		return typ.String()
+		return rtype.String()
 	}
 
-	pkg := typ.PkgPath()
+	pkg := rtype.PkgPath()
 	if pkg == "" {
-		return typ.String()
+		return rtype.String()
 	}
 
 	pkg, ok := packageMap[pkg]
 	if !ok {
-		return typ.String()
+		return rtype.String()
 	}
 	if pkg == "" {
 		return name
@@ -807,8 +804,8 @@ func raw(rval reflect.Value) (unsafe.Pointer, uintptr) {
 	}
 
 	type emptyInterface struct {
-		typ uintptr
-		dat unsafe.Pointer
+		rtype uintptr
+		dat   unsafe.Pointer
 	}
 	iface := rval.Interface()
 	return (*emptyInterface)(unsafe.Pointer(&iface)).dat, rval.Type().Size()
@@ -820,4 +817,8 @@ Borrowed from the standard library. Reasonably safe.
 */
 func bytesToMutableString(bytes []byte) string {
 	return *(*string)(unsafe.Pointer(&bytes))
+}
+
+func isSfieldExported(sfield reflect.StructField) bool {
+	return sfield.PkgPath == ""
 }
