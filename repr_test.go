@@ -2,7 +2,6 @@ package repr
 
 import (
 	"encoding/json"
-	"fmt"
 	"go/format"
 	"testing"
 
@@ -16,11 +15,11 @@ func ExampleString() {
 		List   []int
 	}
 
-	fmt.Println(String(Data{
+	Println(Data{
 		Number: 123,
 		String: "hello world!",
 		List:   []int{10, 20, 30},
-	}))
+	})
 
 	// Output:
 	// repr.Data{

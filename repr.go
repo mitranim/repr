@@ -81,8 +81,7 @@ Some of these limitations may be lifted in future versions.
 
 Pointers to composite types such as structs, arrays, slices and maps are
 supported by prefixing literals with "&". Go currently doesn't support this for
-primitive literals. On the bright side, you probably shouldn't use pointers to
-primitive types anyway.
+primitive literals.
 
 Installation
 
@@ -102,11 +101,11 @@ Example:
 		List   []int
 	}
 
-	fmt.Println(repr.String(Data{
+	repr.Println(Data{
 		Number: 123,
 		String: "hello world!",
 		List:   []int{10, 20, 30},
-	}))
+	})
 
 	// Output
 	Data{
@@ -123,6 +122,7 @@ changes, open an issue or chat me up. Contacts: https://mitranim.com/#contacts
 package repr
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"unsafe"
@@ -223,6 +223,20 @@ appending the output to the provided buffer. See "Config" for details.
 */
 func AppendC(out []byte, val interface{}, conf Config) []byte {
 	return appendAny(out, val, conf, false, 0)
+}
+
+/*
+Shortcut for `fmt.Println(repr.String(val))`.
+*/
+func Println(val interface{}) (int, error) {
+	return fmt.Println(String(val))
+}
+
+/*
+Shortcut for `fmt.Println(repr.StringC(val, conf))`.
+*/
+func PrintlnC(val interface{}, conf Config) (int, error) {
+	return fmt.Println(String(val))
 }
 
 var (

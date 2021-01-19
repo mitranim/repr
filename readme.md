@@ -17,11 +17,11 @@ type Data struct {
   List   []int
 }
 
-fmt.Println(repr.String(Data{
+repr.Println(Data{
   Number: 123,
   String: "hello world!",
   List:   []int{10, 20, 30},
-}))
+})
 
 /*
 Data{
