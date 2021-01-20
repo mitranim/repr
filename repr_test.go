@@ -46,9 +46,7 @@ func TestDefault(t *testing.T) {
 }
 
 func TestSingleLine(t *testing.T) {
-	conf := Config{
-		SingleLine: true,
-	}
+	conf := Config{SingleLine: true}
 	actual := StringC(testStructure, conf)
 	expected := testOutputSingleLine
 	if actual != expected {
@@ -111,11 +109,19 @@ func TestSingleLineRenamed(t *testing.T) {
 }
 
 func TestZeroFields(t *testing.T) {
-	conf := Config{
-		ZeroFields: true,
-	}
+	conf := Config{ZeroFields: true}
 	actual := StringC(testStructure, conf)
 	expected := testOutputWithZeroFields
+	if actual != expected {
+		t.Fatalf("expected output:\n%v\nactual output:\n%v", expected, actual)
+	}
+}
+
+func TestForceConstructorNames(t *testing.T) {
+	conf := Default
+	conf.ForceConstructorName = true
+	actual := StringC(testStructure, conf)
+	expected := testOutputWithForcedConstructorNames
 	if actual != expected {
 		t.Fatalf("expected output:\n%v\nactual output:\n%v", expected, actual)
 	}
@@ -454,14 +460,14 @@ const testOutputDefault = `test.Abi{
 		Name: "two",
 		Constant: true,
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Type: "uint256",
 				AbiType: test.AbiType{
 					Type: "uint256",
 					Kind: 2,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "uint32[]",
 				AbiType: test.AbiType{
 					Type: "uint32[]",
@@ -472,7 +478,7 @@ const testOutputDefault = `test.Abi{
 					},
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "bytes10",
 				AbiType: test.AbiType{
 					Type: "bytes10",
@@ -481,7 +487,7 @@ const testOutputDefault = `test.Abi{
 					FixedLen: true,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "bytes",
 				AbiType: test.AbiType{
 					Type: "bytes",
@@ -498,21 +504,21 @@ const testOutputDefault = `test.Abi{
 		Name: "one",
 		Constant: true,
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Type: "bytes",
 				AbiType: test.AbiType{
 					Type: "bytes",
 					Kind: 6,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "bool",
 				AbiType: test.AbiType{
 					Type: "bool",
 					Kind: 1,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "uint256[]",
 				AbiType: test.AbiType{
 					Type: "uint256[]",
@@ -533,7 +539,7 @@ const testOutputDefault = `test.Abi{
 		Name: "three",
 		Constant: true,
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Type: "address",
 				AbiType: test.AbiType{
 					Type: "address",
@@ -551,14 +557,14 @@ const testOutputDefault = `test.Abi{
 		Constant: true,
 		Inputs: []test.AbiParam{},
 		Outputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Type: "address",
 				AbiType: test.AbiType{
 					Type: "address",
 					Kind: 4,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "string",
 				AbiType: test.AbiType{
 					Type: "string",
@@ -573,7 +579,7 @@ const testOutputDefault = `test.Abi{
 		Type: "event",
 		Name: "Transfer",
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: test.AbiType{
@@ -581,7 +587,7 @@ const testOutputDefault = `test.Abi{
 					Kind: 4,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: test.AbiType{
@@ -589,7 +595,7 @@ const testOutputDefault = `test.Abi{
 					Kind: 4,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "uint256",
 				Indexed: true,
 				AbiType: test.AbiType{
@@ -605,7 +611,7 @@ const testOutputDefault = `test.Abi{
 			0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef,
 		},
 		IndexedInputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: test.AbiType{
@@ -613,7 +619,7 @@ const testOutputDefault = `test.Abi{
 					Kind: 4,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: test.AbiType{
@@ -621,7 +627,7 @@ const testOutputDefault = `test.Abi{
 					Kind: 4,
 				},
 			},
-			test.AbiParam{
+			{
 				Type: "uint256",
 				Indexed: true,
 				AbiType: test.AbiType{
@@ -633,7 +639,7 @@ const testOutputDefault = `test.Abi{
 	},
 }`
 
-const testOutputSingleLine = `test.Abi{test.AbiFunction{Type: "function", Name: "two", Constant: true, Inputs: []test.AbiParam{test.AbiParam{Type: "uint256", AbiType: test.AbiType{Type: "uint256", Kind: 2}}, test.AbiParam{Type: "uint32[]", AbiType: test.AbiType{Type: "uint32[]", Kind: 7, Elem: &test.AbiType{Type: "uint32", Kind: 2}}}, test.AbiParam{Type: "bytes10", AbiType: test.AbiType{Type: "bytes10", Kind: 6, ArrayLen: 10, FixedLen: true}}, test.AbiParam{Type: "bytes", AbiType: test.AbiType{Type: "bytes", Kind: 6}}}, Outputs: []test.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44}}, test.AbiFunction{Type: "function", Name: "one", Constant: true, Inputs: []test.AbiParam{test.AbiParam{Type: "bytes", AbiType: test.AbiType{Type: "bytes", Kind: 6}}, test.AbiParam{Type: "bool", AbiType: test.AbiType{Type: "bool", Kind: 1}}, test.AbiParam{Type: "uint256[]", AbiType: test.AbiType{Type: "uint256[]", Kind: 7, Elem: &test.AbiType{Type: "uint256", Kind: 2}}}}, Outputs: []test.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd}}, test.AbiFunction{Type: "function", Name: "three", Constant: true, Inputs: []test.AbiParam{test.AbiParam{Type: "address", AbiType: test.AbiType{Type: "address", Kind: 4}}}, Outputs: []test.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25}}, test.AbiFunction{Type: "function", Name: "four", Constant: true, Inputs: []test.AbiParam{}, Outputs: []test.AbiParam{test.AbiParam{Type: "address", AbiType: test.AbiType{Type: "address", Kind: 4}}, test.AbiParam{Type: "string", AbiType: test.AbiType{Type: "string", Kind: 6}}}, StateMutability: "pure", Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6}}, test.AbiEvent{Type: "event", Name: "Transfer", Inputs: []test.AbiParam{test.AbiParam{Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, test.AbiParam{Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, test.AbiParam{Type: "uint256", Indexed: true, AbiType: test.AbiType{Type: "uint256", Kind: 2}}}, Selector: test.Word{0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b, 0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa, 0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16, 0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef}, IndexedInputs: []test.AbiParam{test.AbiParam{Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, test.AbiParam{Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, test.AbiParam{Type: "uint256", Indexed: true, AbiType: test.AbiType{Type: "uint256", Kind: 2}}}}}`
+const testOutputSingleLine = `test.Abi{test.AbiFunction{Type: "function", Name: "two", Constant: true, Inputs: []test.AbiParam{{Type: "uint256", AbiType: test.AbiType{Type: "uint256", Kind: 2}}, {Type: "uint32[]", AbiType: test.AbiType{Type: "uint32[]", Kind: 7, Elem: &test.AbiType{Type: "uint32", Kind: 2}}}, {Type: "bytes10", AbiType: test.AbiType{Type: "bytes10", Kind: 6, ArrayLen: 10, FixedLen: true}}, {Type: "bytes", AbiType: test.AbiType{Type: "bytes", Kind: 6}}}, Outputs: []test.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44}}, test.AbiFunction{Type: "function", Name: "one", Constant: true, Inputs: []test.AbiParam{{Type: "bytes", AbiType: test.AbiType{Type: "bytes", Kind: 6}}, {Type: "bool", AbiType: test.AbiType{Type: "bool", Kind: 1}}, {Type: "uint256[]", AbiType: test.AbiType{Type: "uint256[]", Kind: 7, Elem: &test.AbiType{Type: "uint256", Kind: 2}}}}, Outputs: []test.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd}}, test.AbiFunction{Type: "function", Name: "three", Constant: true, Inputs: []test.AbiParam{{Type: "address", AbiType: test.AbiType{Type: "address", Kind: 4}}}, Outputs: []test.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25}}, test.AbiFunction{Type: "function", Name: "four", Constant: true, Inputs: []test.AbiParam{}, Outputs: []test.AbiParam{{Type: "address", AbiType: test.AbiType{Type: "address", Kind: 4}}, {Type: "string", AbiType: test.AbiType{Type: "string", Kind: 6}}}, StateMutability: "pure", Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6}}, test.AbiEvent{Type: "event", Name: "Transfer", Inputs: []test.AbiParam{{Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, {Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, {Type: "uint256", Indexed: true, AbiType: test.AbiType{Type: "uint256", Kind: 2}}}, Selector: test.Word{0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b, 0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa, 0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16, 0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef}, IndexedInputs: []test.AbiParam{{Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, {Type: "address", Indexed: true, AbiType: test.AbiType{Type: "address", Kind: 4}}, {Type: "uint256", Indexed: true, AbiType: test.AbiType{Type: "uint256", Kind: 2}}}}}`
 
 const testOutputWithoutPackageName = `Abi{
 	AbiFunction{
@@ -641,14 +647,14 @@ const testOutputWithoutPackageName = `Abi{
 		Name: "two",
 		Constant: true,
 		Inputs: []AbiParam{
-			AbiParam{
+			{
 				Type: "uint256",
 				AbiType: AbiType{
 					Type: "uint256",
 					Kind: 2,
 				},
 			},
-			AbiParam{
+			{
 				Type: "uint32[]",
 				AbiType: AbiType{
 					Type: "uint32[]",
@@ -659,7 +665,7 @@ const testOutputWithoutPackageName = `Abi{
 					},
 				},
 			},
-			AbiParam{
+			{
 				Type: "bytes10",
 				AbiType: AbiType{
 					Type: "bytes10",
@@ -668,7 +674,7 @@ const testOutputWithoutPackageName = `Abi{
 					FixedLen: true,
 				},
 			},
-			AbiParam{
+			{
 				Type: "bytes",
 				AbiType: AbiType{
 					Type: "bytes",
@@ -685,21 +691,21 @@ const testOutputWithoutPackageName = `Abi{
 		Name: "one",
 		Constant: true,
 		Inputs: []AbiParam{
-			AbiParam{
+			{
 				Type: "bytes",
 				AbiType: AbiType{
 					Type: "bytes",
 					Kind: 6,
 				},
 			},
-			AbiParam{
+			{
 				Type: "bool",
 				AbiType: AbiType{
 					Type: "bool",
 					Kind: 1,
 				},
 			},
-			AbiParam{
+			{
 				Type: "uint256[]",
 				AbiType: AbiType{
 					Type: "uint256[]",
@@ -720,7 +726,7 @@ const testOutputWithoutPackageName = `Abi{
 		Name: "three",
 		Constant: true,
 		Inputs: []AbiParam{
-			AbiParam{
+			{
 				Type: "address",
 				AbiType: AbiType{
 					Type: "address",
@@ -738,14 +744,14 @@ const testOutputWithoutPackageName = `Abi{
 		Constant: true,
 		Inputs: []AbiParam{},
 		Outputs: []AbiParam{
-			AbiParam{
+			{
 				Type: "address",
 				AbiType: AbiType{
 					Type: "address",
 					Kind: 4,
 				},
 			},
-			AbiParam{
+			{
 				Type: "string",
 				AbiType: AbiType{
 					Type: "string",
@@ -760,7 +766,7 @@ const testOutputWithoutPackageName = `Abi{
 		Type: "event",
 		Name: "Transfer",
 		Inputs: []AbiParam{
-			AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: AbiType{
@@ -768,7 +774,7 @@ const testOutputWithoutPackageName = `Abi{
 					Kind: 4,
 				},
 			},
-			AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: AbiType{
@@ -776,7 +782,7 @@ const testOutputWithoutPackageName = `Abi{
 					Kind: 4,
 				},
 			},
-			AbiParam{
+			{
 				Type: "uint256",
 				Indexed: true,
 				AbiType: AbiType{
@@ -792,7 +798,7 @@ const testOutputWithoutPackageName = `Abi{
 			0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef,
 		},
 		IndexedInputs: []AbiParam{
-			AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: AbiType{
@@ -800,7 +806,7 @@ const testOutputWithoutPackageName = `Abi{
 					Kind: 4,
 				},
 			},
-			AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: AbiType{
@@ -808,7 +814,7 @@ const testOutputWithoutPackageName = `Abi{
 					Kind: 4,
 				},
 			},
-			AbiParam{
+			{
 				Type: "uint256",
 				Indexed: true,
 				AbiType: AbiType{
@@ -820,7 +826,7 @@ const testOutputWithoutPackageName = `Abi{
 	},
 }`
 
-const testOutputSingleLineWithoutPackageName = `Abi{AbiFunction{Type: "function", Name: "two", Constant: true, Inputs: []AbiParam{AbiParam{Type: "uint256", AbiType: AbiType{Type: "uint256", Kind: 2}}, AbiParam{Type: "uint32[]", AbiType: AbiType{Type: "uint32[]", Kind: 7, Elem: &AbiType{Type: "uint32", Kind: 2}}}, AbiParam{Type: "bytes10", AbiType: AbiType{Type: "bytes10", Kind: 6, ArrayLen: 10, FixedLen: true}}, AbiParam{Type: "bytes", AbiType: AbiType{Type: "bytes", Kind: 6}}}, Outputs: []AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44}}, AbiFunction{Type: "function", Name: "one", Constant: true, Inputs: []AbiParam{AbiParam{Type: "bytes", AbiType: AbiType{Type: "bytes", Kind: 6}}, AbiParam{Type: "bool", AbiType: AbiType{Type: "bool", Kind: 1}}, AbiParam{Type: "uint256[]", AbiType: AbiType{Type: "uint256[]", Kind: 7, Elem: &AbiType{Type: "uint256", Kind: 2}}}}, Outputs: []AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd}}, AbiFunction{Type: "function", Name: "three", Constant: true, Inputs: []AbiParam{AbiParam{Type: "address", AbiType: AbiType{Type: "address", Kind: 4}}}, Outputs: []AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25}}, AbiFunction{Type: "function", Name: "four", Constant: true, Inputs: []AbiParam{}, Outputs: []AbiParam{AbiParam{Type: "address", AbiType: AbiType{Type: "address", Kind: 4}}, AbiParam{Type: "string", AbiType: AbiType{Type: "string", Kind: 6}}}, StateMutability: "pure", Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6}}, AbiEvent{Type: "event", Name: "Transfer", Inputs: []AbiParam{AbiParam{Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, AbiParam{Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, AbiParam{Type: "uint256", Indexed: true, AbiType: AbiType{Type: "uint256", Kind: 2}}}, Selector: Word{0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b, 0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa, 0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16, 0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef}, IndexedInputs: []AbiParam{AbiParam{Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, AbiParam{Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, AbiParam{Type: "uint256", Indexed: true, AbiType: AbiType{Type: "uint256", Kind: 2}}}}}`
+const testOutputSingleLineWithoutPackageName = `Abi{AbiFunction{Type: "function", Name: "two", Constant: true, Inputs: []AbiParam{{Type: "uint256", AbiType: AbiType{Type: "uint256", Kind: 2}}, {Type: "uint32[]", AbiType: AbiType{Type: "uint32[]", Kind: 7, Elem: &AbiType{Type: "uint32", Kind: 2}}}, {Type: "bytes10", AbiType: AbiType{Type: "bytes10", Kind: 6, ArrayLen: 10, FixedLen: true}}, {Type: "bytes", AbiType: AbiType{Type: "bytes", Kind: 6}}}, Outputs: []AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44}}, AbiFunction{Type: "function", Name: "one", Constant: true, Inputs: []AbiParam{{Type: "bytes", AbiType: AbiType{Type: "bytes", Kind: 6}}, {Type: "bool", AbiType: AbiType{Type: "bool", Kind: 1}}, {Type: "uint256[]", AbiType: AbiType{Type: "uint256[]", Kind: 7, Elem: &AbiType{Type: "uint256", Kind: 2}}}}, Outputs: []AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd}}, AbiFunction{Type: "function", Name: "three", Constant: true, Inputs: []AbiParam{{Type: "address", AbiType: AbiType{Type: "address", Kind: 4}}}, Outputs: []AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25}}, AbiFunction{Type: "function", Name: "four", Constant: true, Inputs: []AbiParam{}, Outputs: []AbiParam{{Type: "address", AbiType: AbiType{Type: "address", Kind: 4}}, {Type: "string", AbiType: AbiType{Type: "string", Kind: 6}}}, StateMutability: "pure", Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6}}, AbiEvent{Type: "event", Name: "Transfer", Inputs: []AbiParam{{Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, {Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, {Type: "uint256", Indexed: true, AbiType: AbiType{Type: "uint256", Kind: 2}}}, Selector: Word{0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b, 0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa, 0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16, 0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef}, IndexedInputs: []AbiParam{{Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, {Type: "address", Indexed: true, AbiType: AbiType{Type: "address", Kind: 4}}, {Type: "uint256", Indexed: true, AbiType: AbiType{Type: "uint256", Kind: 2}}}}}`
 
 const testOutputRenamed = `renamed.Abi{
 	renamed.AbiFunction{
@@ -828,14 +834,14 @@ const testOutputRenamed = `renamed.Abi{
 		Name: "two",
 		Constant: true,
 		Inputs: []renamed.AbiParam{
-			renamed.AbiParam{
+			{
 				Type: "uint256",
 				AbiType: renamed.AbiType{
 					Type: "uint256",
 					Kind: 2,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "uint32[]",
 				AbiType: renamed.AbiType{
 					Type: "uint32[]",
@@ -846,7 +852,7 @@ const testOutputRenamed = `renamed.Abi{
 					},
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "bytes10",
 				AbiType: renamed.AbiType{
 					Type: "bytes10",
@@ -855,7 +861,7 @@ const testOutputRenamed = `renamed.Abi{
 					FixedLen: true,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "bytes",
 				AbiType: renamed.AbiType{
 					Type: "bytes",
@@ -872,21 +878,21 @@ const testOutputRenamed = `renamed.Abi{
 		Name: "one",
 		Constant: true,
 		Inputs: []renamed.AbiParam{
-			renamed.AbiParam{
+			{
 				Type: "bytes",
 				AbiType: renamed.AbiType{
 					Type: "bytes",
 					Kind: 6,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "bool",
 				AbiType: renamed.AbiType{
 					Type: "bool",
 					Kind: 1,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "uint256[]",
 				AbiType: renamed.AbiType{
 					Type: "uint256[]",
@@ -907,7 +913,7 @@ const testOutputRenamed = `renamed.Abi{
 		Name: "three",
 		Constant: true,
 		Inputs: []renamed.AbiParam{
-			renamed.AbiParam{
+			{
 				Type: "address",
 				AbiType: renamed.AbiType{
 					Type: "address",
@@ -925,14 +931,14 @@ const testOutputRenamed = `renamed.Abi{
 		Constant: true,
 		Inputs: []renamed.AbiParam{},
 		Outputs: []renamed.AbiParam{
-			renamed.AbiParam{
+			{
 				Type: "address",
 				AbiType: renamed.AbiType{
 					Type: "address",
 					Kind: 4,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "string",
 				AbiType: renamed.AbiType{
 					Type: "string",
@@ -947,7 +953,7 @@ const testOutputRenamed = `renamed.Abi{
 		Type: "event",
 		Name: "Transfer",
 		Inputs: []renamed.AbiParam{
-			renamed.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: renamed.AbiType{
@@ -955,7 +961,7 @@ const testOutputRenamed = `renamed.Abi{
 					Kind: 4,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: renamed.AbiType{
@@ -963,7 +969,7 @@ const testOutputRenamed = `renamed.Abi{
 					Kind: 4,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "uint256",
 				Indexed: true,
 				AbiType: renamed.AbiType{
@@ -979,7 +985,7 @@ const testOutputRenamed = `renamed.Abi{
 			0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef,
 		},
 		IndexedInputs: []renamed.AbiParam{
-			renamed.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: renamed.AbiType{
@@ -987,7 +993,7 @@ const testOutputRenamed = `renamed.Abi{
 					Kind: 4,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "address",
 				Indexed: true,
 				AbiType: renamed.AbiType{
@@ -995,7 +1001,7 @@ const testOutputRenamed = `renamed.Abi{
 					Kind: 4,
 				},
 			},
-			renamed.AbiParam{
+			{
 				Type: "uint256",
 				Indexed: true,
 				AbiType: renamed.AbiType{
@@ -1007,7 +1013,7 @@ const testOutputRenamed = `renamed.Abi{
 	},
 }`
 
-const testOutputSingleLineRenamed = `renamed.Abi{renamed.AbiFunction{Type: "function", Name: "two", Constant: true, Inputs: []renamed.AbiParam{renamed.AbiParam{Type: "uint256", AbiType: renamed.AbiType{Type: "uint256", Kind: 2}}, renamed.AbiParam{Type: "uint32[]", AbiType: renamed.AbiType{Type: "uint32[]", Kind: 7, Elem: &renamed.AbiType{Type: "uint32", Kind: 2}}}, renamed.AbiParam{Type: "bytes10", AbiType: renamed.AbiType{Type: "bytes10", Kind: 6, ArrayLen: 10, FixedLen: true}}, renamed.AbiParam{Type: "bytes", AbiType: renamed.AbiType{Type: "bytes", Kind: 6}}}, Outputs: []renamed.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44}}, renamed.AbiFunction{Type: "function", Name: "one", Constant: true, Inputs: []renamed.AbiParam{renamed.AbiParam{Type: "bytes", AbiType: renamed.AbiType{Type: "bytes", Kind: 6}}, renamed.AbiParam{Type: "bool", AbiType: renamed.AbiType{Type: "bool", Kind: 1}}, renamed.AbiParam{Type: "uint256[]", AbiType: renamed.AbiType{Type: "uint256[]", Kind: 7, Elem: &renamed.AbiType{Type: "uint256", Kind: 2}}}}, Outputs: []renamed.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd}}, renamed.AbiFunction{Type: "function", Name: "three", Constant: true, Inputs: []renamed.AbiParam{renamed.AbiParam{Type: "address", AbiType: renamed.AbiType{Type: "address", Kind: 4}}}, Outputs: []renamed.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25}}, renamed.AbiFunction{Type: "function", Name: "four", Constant: true, Inputs: []renamed.AbiParam{}, Outputs: []renamed.AbiParam{renamed.AbiParam{Type: "address", AbiType: renamed.AbiType{Type: "address", Kind: 4}}, renamed.AbiParam{Type: "string", AbiType: renamed.AbiType{Type: "string", Kind: 6}}}, StateMutability: "pure", Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6}}, renamed.AbiEvent{Type: "event", Name: "Transfer", Inputs: []renamed.AbiParam{renamed.AbiParam{Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, renamed.AbiParam{Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, renamed.AbiParam{Type: "uint256", Indexed: true, AbiType: renamed.AbiType{Type: "uint256", Kind: 2}}}, Selector: renamed.Word{0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b, 0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa, 0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16, 0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef}, IndexedInputs: []renamed.AbiParam{renamed.AbiParam{Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, renamed.AbiParam{Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, renamed.AbiParam{Type: "uint256", Indexed: true, AbiType: renamed.AbiType{Type: "uint256", Kind: 2}}}}}`
+const testOutputSingleLineRenamed = `renamed.Abi{renamed.AbiFunction{Type: "function", Name: "two", Constant: true, Inputs: []renamed.AbiParam{{Type: "uint256", AbiType: renamed.AbiType{Type: "uint256", Kind: 2}}, {Type: "uint32[]", AbiType: renamed.AbiType{Type: "uint32[]", Kind: 7, Elem: &renamed.AbiType{Type: "uint32", Kind: 2}}}, {Type: "bytes10", AbiType: renamed.AbiType{Type: "bytes10", Kind: 6, ArrayLen: 10, FixedLen: true}}, {Type: "bytes", AbiType: renamed.AbiType{Type: "bytes", Kind: 6}}}, Outputs: []renamed.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44}}, renamed.AbiFunction{Type: "function", Name: "one", Constant: true, Inputs: []renamed.AbiParam{{Type: "bytes", AbiType: renamed.AbiType{Type: "bytes", Kind: 6}}, {Type: "bool", AbiType: renamed.AbiType{Type: "bool", Kind: 1}}, {Type: "uint256[]", AbiType: renamed.AbiType{Type: "uint256[]", Kind: 7, Elem: &renamed.AbiType{Type: "uint256", Kind: 2}}}}, Outputs: []renamed.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd}}, renamed.AbiFunction{Type: "function", Name: "three", Constant: true, Inputs: []renamed.AbiParam{{Type: "address", AbiType: renamed.AbiType{Type: "address", Kind: 4}}}, Outputs: []renamed.AbiParam{}, StateMutability: "pure", Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25}}, renamed.AbiFunction{Type: "function", Name: "four", Constant: true, Inputs: []renamed.AbiParam{}, Outputs: []renamed.AbiParam{{Type: "address", AbiType: renamed.AbiType{Type: "address", Kind: 4}}, {Type: "string", AbiType: renamed.AbiType{Type: "string", Kind: 6}}}, StateMutability: "pure", Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6}}, renamed.AbiEvent{Type: "event", Name: "Transfer", Inputs: []renamed.AbiParam{{Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, {Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, {Type: "uint256", Indexed: true, AbiType: renamed.AbiType{Type: "uint256", Kind: 2}}}, Selector: renamed.Word{0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b, 0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa, 0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16, 0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef}, IndexedInputs: []renamed.AbiParam{{Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, {Type: "address", Indexed: true, AbiType: renamed.AbiType{Type: "address", Kind: 4}}, {Type: "uint256", Indexed: true, AbiType: renamed.AbiType{Type: "uint256", Kind: 2}}}}}`
 
 const testOutputWithZeroFields = `test.Abi{
 	test.AbiFunction{
@@ -1015,7 +1021,7 @@ const testOutputWithZeroFields = `test.Abi{
 		Name: "two",
 		Constant: true,
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "uint256",
 				Components: nil,
@@ -1028,7 +1034,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "uint32[]",
 				Components: nil,
@@ -1047,7 +1053,7 @@ const testOutputWithZeroFields = `test.Abi{
 					},
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "bytes10",
 				Components: nil,
@@ -1060,7 +1066,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "bytes",
 				Components: nil,
@@ -1084,7 +1090,7 @@ const testOutputWithZeroFields = `test.Abi{
 		Name: "one",
 		Constant: true,
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "bytes",
 				Components: nil,
@@ -1097,7 +1103,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "bool",
 				Components: nil,
@@ -1110,7 +1116,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "uint256[]",
 				Components: nil,
@@ -1140,7 +1146,7 @@ const testOutputWithZeroFields = `test.Abi{
 		Name: "three",
 		Constant: true,
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "address",
 				Components: nil,
@@ -1165,7 +1171,7 @@ const testOutputWithZeroFields = `test.Abi{
 		Constant: true,
 		Inputs: []test.AbiParam{},
 		Outputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "address",
 				Components: nil,
@@ -1178,7 +1184,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "string",
 				Components: nil,
@@ -1200,7 +1206,7 @@ const testOutputWithZeroFields = `test.Abi{
 		Type: "event",
 		Name: "Transfer",
 		Inputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "address",
 				Components: nil,
@@ -1213,7 +1219,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "address",
 				Components: nil,
@@ -1226,7 +1232,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "uint256",
 				Components: nil,
@@ -1248,7 +1254,7 @@ const testOutputWithZeroFields = `test.Abi{
 			0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef,
 		},
 		IndexedInputs: []test.AbiParam{
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "address",
 				Components: nil,
@@ -1261,7 +1267,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "address",
 				Components: nil,
@@ -1274,7 +1280,7 @@ const testOutputWithZeroFields = `test.Abi{
 					Elem: nil,
 				},
 			},
-			test.AbiParam{
+			{
 				Name: "",
 				Type: "uint256",
 				Components: nil,
@@ -1289,6 +1295,191 @@ const testOutputWithZeroFields = `test.Abi{
 			},
 		},
 		NonIndexedInputs: nil,
+	},
+}`
+
+const testOutputWithForcedConstructorNames = `test.Abi{
+	test.AbiFunction{
+		Type: "function",
+		Name: "two",
+		Constant: true,
+		Inputs: []test.AbiParam{
+			test.AbiParam{
+				Type: "uint256",
+				AbiType: test.AbiType{
+					Type: "uint256",
+					Kind: 2,
+				},
+			},
+			test.AbiParam{
+				Type: "uint32[]",
+				AbiType: test.AbiType{
+					Type: "uint32[]",
+					Kind: 7,
+					Elem: &test.AbiType{
+						Type: "uint32",
+						Kind: 2,
+					},
+				},
+			},
+			test.AbiParam{
+				Type: "bytes10",
+				AbiType: test.AbiType{
+					Type: "bytes10",
+					Kind: 6,
+					ArrayLen: 10,
+					FixedLen: true,
+				},
+			},
+			test.AbiParam{
+				Type: "bytes",
+				AbiType: test.AbiType{
+					Type: "bytes",
+					Kind: 6,
+				},
+			},
+		},
+		Outputs: []test.AbiParam{},
+		StateMutability: "pure",
+		Selector: [4]uint8{0x26, 0x15, 0xf1, 0x44},
+	},
+	test.AbiFunction{
+		Type: "function",
+		Name: "one",
+		Constant: true,
+		Inputs: []test.AbiParam{
+			test.AbiParam{
+				Type: "bytes",
+				AbiType: test.AbiType{
+					Type: "bytes",
+					Kind: 6,
+				},
+			},
+			test.AbiParam{
+				Type: "bool",
+				AbiType: test.AbiType{
+					Type: "bool",
+					Kind: 1,
+				},
+			},
+			test.AbiParam{
+				Type: "uint256[]",
+				AbiType: test.AbiType{
+					Type: "uint256[]",
+					Kind: 7,
+					Elem: &test.AbiType{
+						Type: "uint256",
+						Kind: 2,
+					},
+				},
+			},
+		},
+		Outputs: []test.AbiParam{},
+		StateMutability: "pure",
+		Selector: [4]uint8{0x55, 0xcb, 0x92, 0xcd},
+	},
+	test.AbiFunction{
+		Type: "function",
+		Name: "three",
+		Constant: true,
+		Inputs: []test.AbiParam{
+			test.AbiParam{
+				Type: "address",
+				AbiType: test.AbiType{
+					Type: "address",
+					Kind: 4,
+				},
+			},
+		},
+		Outputs: []test.AbiParam{},
+		StateMutability: "pure",
+		Selector: [4]uint8{0x9c, 0x82, 0xcb, 0x25},
+	},
+	test.AbiFunction{
+		Type: "function",
+		Name: "four",
+		Constant: true,
+		Inputs: []test.AbiParam{},
+		Outputs: []test.AbiParam{
+			test.AbiParam{
+				Type: "address",
+				AbiType: test.AbiType{
+					Type: "address",
+					Kind: 4,
+				},
+			},
+			test.AbiParam{
+				Type: "string",
+				AbiType: test.AbiType{
+					Type: "string",
+					Kind: 6,
+				},
+			},
+		},
+		StateMutability: "pure",
+		Selector: [4]uint8{0xa1, 0xfc, 0xa2, 0xb6},
+	},
+	test.AbiEvent{
+		Type: "event",
+		Name: "Transfer",
+		Inputs: []test.AbiParam{
+			test.AbiParam{
+				Type: "address",
+				Indexed: true,
+				AbiType: test.AbiType{
+					Type: "address",
+					Kind: 4,
+				},
+			},
+			test.AbiParam{
+				Type: "address",
+				Indexed: true,
+				AbiType: test.AbiType{
+					Type: "address",
+					Kind: 4,
+				},
+			},
+			test.AbiParam{
+				Type: "uint256",
+				Indexed: true,
+				AbiType: test.AbiType{
+					Type: "uint256",
+					Kind: 2,
+				},
+			},
+		},
+		Selector: test.Word{
+			0xdd, 0xf2, 0x52, 0xad, 0x1b, 0xe2, 0xc8, 0x9b,
+			0x69, 0xc2, 0xb0, 0x68, 0xfc, 0x37, 0x8d, 0xaa,
+			0x95, 0x2b, 0xa7, 0xf1, 0x63, 0xc4, 0xa1, 0x16,
+			0x28, 0xf5, 0x5a, 0x4d, 0xf5, 0x23, 0xb3, 0xef,
+		},
+		IndexedInputs: []test.AbiParam{
+			test.AbiParam{
+				Type: "address",
+				Indexed: true,
+				AbiType: test.AbiType{
+					Type: "address",
+					Kind: 4,
+				},
+			},
+			test.AbiParam{
+				Type: "address",
+				Indexed: true,
+				AbiType: test.AbiType{
+					Type: "address",
+					Kind: 4,
+				},
+			},
+			test.AbiParam{
+				Type: "uint256",
+				Indexed: true,
+				AbiType: test.AbiType{
+					Type: "uint256",
+					Kind: 2,
+				},
+			},
+		},
 	},
 }`
 

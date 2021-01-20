@@ -14,13 +14,13 @@ Why
 
 Motives:
 
-	* Dumping data as code is useful for code generation and debugging
+• Dumping data as code is useful for code generation and debugging.
 
-	* fmt.Sprintf("%#v") doesn't always output valid code, has no multiline mode
+• fmt.Sprintf("%#v") doesn't always output valid code, has no multiline mode.
 
-	* https://github.com/davecgh/go-spew/spew doesn't output valid code, has no single-line mode
+• https://github.com/davecgh/go-spew/spew doesn't output valid code, has no single-line mode.
 
-	* https://github.com/shurcooL/go-goon outputs too much noise, has no single-line mode
+• https://github.com/shurcooL/go-goon outputs too much noise, has no single-line mode.
 
 Features
 
@@ -58,30 +58,30 @@ Limitations
 
 Some of these limitations may be lifted in future versions.
 
-	* Fancy types such as "big.Int" or "time.Time" are printed as empty structs;
-	  ideally they would be printed as constructor calls
+• Fancy types such as "big.Int" or "time.Time" are printed as empty structs;
+ideally they would be printed as constructor calls.
 
-	* Funcs are treated as nil
+• Funcs are treated as nil.
 
-	* Chans are treated as nil
+• Chans are treated as nil.
 
-	* Pointers to primitive types are not supported and cause a panic
+• Pointers to primitive types are not supported and cause a panic.
 
-	* "byte" is printed as "uint8"
+• "byte" is printed as "uint8".
 
-	* "rune" is printed as "int32"
+• "rune" is printed as "int32".
 
-	* Runes are printed as integers, not character literals
+• Runes are printed as integers, not character literals.
 
-	* Enum-style constants are not mapped back to identifers
+• Enum-style constants are not mapped back to identifers.
 
-	* On structs, only exported fields are included
+• On structs, only exported fields are included.
 
-	* Cyclic structures cause infinite recursion
+• Cyclic structures cause infinite recursion.
 
-Pointers to composite types such as structs, arrays, slices and maps are
-supported by prefixing literals with "&". Go currently doesn't support this for
-primitive literals.
+Note: pointers to composite types such as structs, arrays, slices and maps are
+supported by prefixing literals with "&", but Go currently doesn't support this
+for primitive literals.
 
 Installation
 
@@ -155,6 +155,12 @@ type Config struct {
 	ZeroFields bool
 
 	/**
+	If true, always print constructor names for elements in arrays and slices. If
+	false (default), elide them wherever possible.
+	*/
+	ForceConstructorName bool
+
+	/**
 	Maps fully-qualified packages to short aliases. Useful for code generation.
 	An empty string causes the package name to be stripped. The default config
 	strips "main." from the output:
@@ -171,7 +177,8 @@ type Config struct {
 }
 
 /*
-Global settings. Used by "String", "Bytes" and "Append". Feel free to modify.
+Global/default settings. Used by functions like "String". Custom configs can be
+passed to functions like "StringC".
 */
 var Default = Config{
 	PackageMap: map[string]string{
@@ -183,7 +190,7 @@ var Default = Config{
 Formats the value using the "Default" config. See "Config" for details.
 */
 func String(val interface{}) string {
-	return bytesToMutableString(appendAny(nil, val, Default, false, 0))
+	return bytesToMutableString(appendAny(nil, val, state{conf: Default}))
 }
 
 /*
@@ -191,14 +198,14 @@ Short for "String with config". Formats the value using the provided config. See
 "Config" for details.
 */
 func StringC(val interface{}, conf Config) string {
-	return bytesToMutableString(appendAny(nil, val, conf, false, 0))
+	return bytesToMutableString(appendAny(nil, val, state{conf: conf}))
 }
 
 /*
 Formats the value using the "Default" config. See "Config" for details.
 */
 func Bytes(val interface{}) []byte {
-	return appendAny(nil, val, Default, false, 0)
+	return appendAny(nil, val, state{conf: Default})
 }
 
 /*
@@ -206,7 +213,7 @@ func Bytes(val interface{}) []byte {
 "Config" for details.
 */
 func BytesC(val interface{}, conf Config) []byte {
-	return appendAny(nil, val, conf, false, 0)
+	return appendAny(nil, val, state{conf: conf})
 }
 
 /*
@@ -214,7 +221,7 @@ Formats the value using the "Default" config, appending the output to the
 provided buffer. See "Config" for details.
 */
 func Append(out []byte, val interface{}) []byte {
-	return appendAny(nil, val, Default, false, 0)
+	return appendAny(nil, val, state{conf: Default})
 }
 
 /*
@@ -222,7 +229,7 @@ Short for "Append with config". Formats the value using the provided config,
 appending the output to the provided buffer. See "Config" for details.
 */
 func AppendC(out []byte, val interface{}, conf Config) []byte {
-	return appendAny(out, val, conf, false, 0)
+	return appendAny(out, val, state{conf: conf})
 }
 
 /*
@@ -244,7 +251,13 @@ var (
 	byteSliceType = reflect.TypeOf([]byte(nil))
 )
 
-func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent int) []byte {
+type state struct {
+	conf      Config
+	indent    int
+	elideType bool
+}
+
+func appendAny(out []byte, val interface{}, state state) []byte {
 	// Well-known types
 	switch val := val.(type) {
 	case bool:
@@ -287,10 +300,10 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 	case string:
 		return strconv.AppendQuote(out, val)
 	case []byte:
-		if !elideType {
+		if !state.elideType {
 			out = append(out, "[]uint8"...)
 		}
-		out = appendBytes(out, val, conf, indent)
+		out = appendBytes(out, val, state)
 		return out
 	}
 
@@ -304,68 +317,68 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 
 	switch rtype.Kind() {
 	case reflect.Bool:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		if rval.Bool() {
 			out = append(out, "true"...)
 		} else {
 			out = append(out, "false"...)
 		}
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = strconv.AppendInt(out, rval.Int(), 10)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = strconv.AppendUint(out, rval.Uint(), 10)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Uintptr:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = strconv.AppendUint(append(out, '0', 'x'), rval.Uint(), 16)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Float32:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = strconv.AppendFloat(out, rval.Float(), 'f', -1, 32)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Float64:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = strconv.AppendFloat(out, rval.Float(), 'f', -1, 64)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Complex64, reflect.Complex128:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = appendComplex128(out, rval.Convert(reflect.TypeOf(complex128(0))).Complex())
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.String:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = strconv.AppendQuote(out, rval.String())
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Chan:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = append(out, "nil"...)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Func:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		out = append(out, "nil"...)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	// Pretty sure this should never match
 	case reflect.Interface:
 		panic("repr currently doesn't support printing an interface")
 
 	case reflect.UnsafePointer:
-		out = appendCastPrefix(out, rval, elideType, conf.PackageMap)
+		out = appendCastPrefix(out, rval, state)
 		ptr := rval.Convert(reflect.TypeOf(unsafe.Pointer(nil))).Interface().(unsafe.Pointer)
 		out = strconv.AppendUint(append(out, '0', 'x'), uint64(uintptr(ptr)), 16)
-		out = appendCastSuffix(out, rval, elideType)
+		out = appendCastSuffix(out, rval, state)
 
 	case reflect.Ptr:
 		switch rtype.Elem().Kind() {
@@ -374,56 +387,56 @@ func appendAny(out []byte, val interface{}, conf Config, elideType bool, indent 
 				out = append(out, "nil"...)
 			} else {
 				out = append(out, '&')
-				out = appendAny(out, rval.Elem().Interface(), conf, elideType, indent)
+				out = appendAny(out, rval.Elem().Interface(), state)
 			}
 		default:
 			panic("repr currently doesn't support pointers to non-composite types")
 		}
 
 	case reflect.Array:
-		if !elideType {
-			out = append(out, typeName(rval.Type(), conf.PackageMap)...)
+		if !state.elideType {
+			out = appendTypeName(out, rval.Type(), state)
 		}
 		if rtype.Elem() == byteType {
-			out = appendBytes(out, byteArrayToSlice(rval), conf, indent)
+			out = appendBytes(out, byteArrayToSlice(rval), state)
 		} else {
-			out = appendList(out, rval, conf, indent)
+			out = appendList(out, rval, state)
 		}
 
 	case reflect.Slice:
-		if !elideType {
-			out = append(out, typeName(rval.Type(), conf.PackageMap)...)
-		}
 		if rval.IsNil() {
-			if elideType {
+			if state.elideType {
 				out = append(out, "nil"...)
 			} else {
+				out = appendTypeName(out, rval.Type(), state)
 				out = append(out, "(nil)"...)
 			}
-		} else if rtype.Elem() == byteType {
-			out = appendBytes(out, rval.Bytes(), conf, indent)
 		} else {
-			out = appendList(out, rval, conf, indent)
+			out = appendTypeName(out, rval.Type(), state)
+			if rtype.Elem() == byteType {
+				out = appendBytes(out, rval.Bytes(), state)
+			} else {
+				out = appendList(out, rval, state)
+			}
 		}
 
 	case reflect.Struct:
-		if !elideType {
-			out = append(out, typeName(rval.Type(), conf.PackageMap)...)
+		if !state.elideType {
+			out = appendTypeName(out, rval.Type(), state)
 		}
-		out = appendStruct(out, rval, conf, indent)
+		out = appendStruct(out, rval, state)
 
 	case reflect.Map:
-		if !elideType {
-			out = append(out, typeName(rval.Type(), conf.PackageMap)...)
-		}
 		if rval.IsNil() {
-			if elideType {
+			if state.elideType {
 				out = append(out, "nil"...)
 			} else {
+				out = appendTypeName(out, rval.Type(), state)
 				out = append(out, "(nil)"...)
 			}
 		} else {
-			out = appendMap(out, rval, conf, indent)
+			out = appendTypeName(out, rval.Type(), state)
+			out = appendMap(out, rval, state)
 		}
 	}
 
@@ -442,15 +455,16 @@ func appendComplex128(out []byte, val complex128) []byte {
 	return out
 }
 
-func appendList(out []byte, rval reflect.Value, conf Config, indent int) []byte {
+func appendList(out []byte, rval reflect.Value, state state) []byte {
 	elemType := rval.Type().Elem()
-	elideElemType := isPrimitive(elemType)
+	state.elideType = canElideType(elemType, state)
 	count := rval.Len()
 
-	if conf.SingleLine || (!mayRequireMultiline(elemType) && count < 48) {
+	if state.conf.SingleLine || (!mayRequireMultiline(elemType) && count < 48) {
+		state.indent = 0
 		out = append(out, '{')
 		for i := 0; i < count; i++ {
-			out = appendAny(out, rval.Index(i).Interface(), conf, elideElemType, 0)
+			out = appendAny(out, rval.Index(i).Interface(), state)
 			if i < count-1 {
 				out = append(out, ',', ' ')
 			}
@@ -462,31 +476,32 @@ func appendList(out []byte, rval reflect.Value, conf Config, indent int) []byte 
 	out = append(out, '{')
 	if count > 0 {
 		out = append(out, '\n')
-		indent++
+		state.indent++
 	}
 
 	for i := 0; i < count; i++ {
-		out = appendIndent(out, indent)
-		out = appendAny(out, rval.Index(i).Interface(), conf, elideElemType, indent)
+		out = appendIndent(out, state)
+		out = appendAny(out, rval.Index(i).Interface(), state)
 		out = append(out, ',', '\n')
 	}
 
 	if count > 0 {
-		indent--
-		out = appendIndent(out, indent)
+		state.indent--
+		out = appendIndent(out, state)
 	}
 
 	out = append(out, '}')
 	return out
 }
 
-func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byte {
+func appendStruct(out []byte, rval reflect.Value, state state) []byte {
 	rtype := rval.Type()
 
-	if conf.SingleLine {
-		out = append(out, '{')
+	if state.conf.SingleLine {
+		state.indent = 0
 		var hasFields bool
 
+		out = append(out, '{')
 		for i := 0; i < rtype.NumField(); i++ {
 			sfield := rtype.Field(i)
 			if !isSfieldExported(sfield) {
@@ -494,7 +509,7 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 			}
 
 			rfield := rval.Field(i)
-			if !conf.ZeroFields && isZeroOrShouldOmit(rfield) {
+			if !state.conf.ZeroFields && isZeroOrShouldOmit(rfield) {
 				continue
 			}
 
@@ -505,15 +520,17 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 
 			out = append(out, sfield.Name...)
 			out = append(out, ':', ' ')
-			elideElemType := isPrimitive(rfield.Type()) || isNil(rfield)
-			out = appendAny(out, rfield.Interface(), conf, elideElemType, 0)
+
+			state := state
+			state.elideType = isPrimitive(rfield.Type()) || isNil(rfield)
+			out = appendAny(out, rfield.Interface(), state)
 		}
 		out = append(out, '}')
 		return out
 	}
 
-	out = append(out, '{')
 	count := 0
+	out = append(out, '{')
 
 	for i := 0; i < rtype.NumField(); i++ {
 		sfield := rtype.Field(i)
@@ -522,53 +539,63 @@ func appendStruct(out []byte, rval reflect.Value, conf Config, indent int) []byt
 		}
 
 		rfield := rval.Field(i)
-		if !conf.ZeroFields && isZeroOrShouldOmit(rfield) {
+		if !state.conf.ZeroFields && isZeroOrShouldOmit(rfield) {
 			continue
 		}
 
 		count++
 		if count == 1 {
 			out = append(out, '\n')
-			indent++
+			state.indent++
 		}
 
-		out = appendIndent(out, indent)
+		out = appendIndent(out, state)
 		out = append(out, sfield.Name...)
 		out = append(out, ':', ' ')
-		elideElemType := isPrimitive(rfield.Type()) || isNil(rfield)
-		out = appendAny(out, rfield.Interface(), conf, elideElemType, indent)
+
+		state := state
+		state.elideType = isPrimitive(rfield.Type()) || isNil(rfield)
+		out = appendAny(out, rfield.Interface(), state)
 		out = append(out, ',', '\n')
 	}
 
 	if count > 0 {
-		indent--
-		out = appendIndent(out, indent)
+		state.indent--
+		out = appendIndent(out, state)
 	}
 
 	out = append(out, '}')
 	return out
 }
 
-func appendMap(out []byte, rval reflect.Value, conf Config, indent int) []byte {
+// TODO: the test doesn't cover constructor elision in maps.
+func appendMap(out []byte, rval reflect.Value, state state) []byte {
 	rtype := rval.Type()
 	keyType := rtype.Key()
 	elemType := rtype.Elem()
-	elideKeyType := isPrimitive(keyType)
-	elideElemType := isPrimitive(elemType)
+	elideKeyType := canElideType(keyType, state)
+	elideElemType := canElideType(elemType, state)
 
-	if conf.SingleLine {
-		out = append(out, '{')
+	if state.conf.SingleLine {
+		state.indent = 0
+
+		keyState := state
+		keyState.elideType = elideKeyType
+
+		elemState := state
+		elemState.elideType = elideElemType
+
 		keys := rval.MapKeys()
 
+		out = append(out, '{')
 		for i, key := range keys {
-			out = appendAny(out, key.Interface(), conf, elideKeyType, 0)
+			out = appendAny(out, key.Interface(), keyState)
 			out = append(out, ':', ' ')
-			out = appendAny(out, rval.MapIndex(key).Interface(), conf, elideElemType, 0)
+			out = appendAny(out, rval.MapIndex(key).Interface(), elemState)
 			if i < len(keys)-1 {
 				out = append(out, ',', ' ')
 			}
 		}
-
 		out = append(out, '}')
 		return out
 	}
@@ -579,20 +606,26 @@ func appendMap(out []byte, rval reflect.Value, conf Config, indent int) []byte {
 	for i, key := range keys {
 		if i == 0 {
 			out = append(out, '\n')
-			indent++
+			state.indent++
 		}
 
-		out = appendIndent(out, indent)
-		out = appendAny(out, key.Interface(), conf, elideKeyType, indent)
+		keyState := state
+		keyState.elideType = elideKeyType
+
+		elemState := state
+		elemState.elideType = elideElemType
+
+		out = appendIndent(out, state)
+		out = appendAny(out, key.Interface(), keyState)
 		out = append(out, ':', ' ')
-		out = appendAny(out, rval.MapIndex(key).Interface(), conf, elideElemType, indent)
+		out = appendAny(out, rval.MapIndex(key).Interface(), elemState)
 
 		out = append(out, ',', '\n')
 	}
 
 	if len(keys) > 0 {
-		indent--
-		out = appendIndent(out, indent)
+		state.indent--
+		out = appendIndent(out, state)
 	}
 
 	out = append(out, '}')
@@ -601,8 +634,8 @@ func appendMap(out []byte, rval reflect.Value, conf Config, indent int) []byte {
 
 // Similar to fmt.Sprintf("%#02v", val), but multiline: large inputs are printed
 // as a column with 8 bytes per row.
-func appendBytes(out []byte, val []byte, conf Config, indent int) []byte {
-	if conf.SingleLine || len(val) <= 8 {
+func appendBytes(out []byte, val []byte, state state) []byte {
+	if state.conf.SingleLine || len(val) <= 8 {
 		out = append(out, '{')
 
 		for i, char := range val {
@@ -616,24 +649,24 @@ func appendBytes(out []byte, val []byte, conf Config, indent int) []byte {
 		return out
 	}
 
-	indent++
+	state.indent++
 	out = append(out, '{', '\n')
 
 	for i, char := range val {
 		if i == 0 {
-			out = appendIndent(out, indent)
+			out = appendIndent(out, state)
 		} else if i%8 == 0 {
 			out = append(out, ',', '\n')
-			out = appendIndent(out, indent)
+			out = appendIndent(out, state)
 		} else {
 			out = append(out, ',', ' ')
 		}
 		out = appendByteHex(out, char)
 	}
 
-	indent--
+	state.indent--
 	out = append(out, ',', '\n')
-	out = appendIndent(out, indent)
+	out = appendIndent(out, state)
 	out = append(out, '}')
 	return out
 }
@@ -654,24 +687,24 @@ func byteArrayToSlice(rval reflect.Value) []byte {
 	return *(*[]byte)(unsafe.Pointer(&slice))
 }
 
-func appendCastPrefix(out []byte, rval reflect.Value, elideType bool, packageMap map[string]string) []byte {
-	if elideType {
+func appendCastPrefix(out []byte, rval reflect.Value, state state) []byte {
+	if state.elideType {
 		return out
 	}
-	out = append(out, typeName(rval.Type(), packageMap)...)
+	out = appendTypeName(out, rval.Type(), state)
 	out = append(out, '(')
 	return out
 }
 
-func appendCastSuffix(out []byte, rval reflect.Value, elideType bool) []byte {
-	if elideType {
+func appendCastSuffix(out []byte, rval reflect.Value, state state) []byte {
+	if state.elideType {
 		return out
 	}
 	return append(out, ')')
 }
 
-func appendIndent(out []byte, indent int) []byte {
-	for i := 0; i < indent; i++ {
+func appendIndent(out []byte, state state) []byte {
+	for i := 0; i < state.indent; i++ {
 		out = append(out, '\t')
 	}
 	return out
@@ -760,6 +793,10 @@ func isPrimitive(rtype reflect.Type) bool {
 	}
 }
 
+func isInterface(rtype reflect.Type) bool {
+	return rtype.Kind() == reflect.Interface
+}
+
 func isNil(rval reflect.Value) bool {
 	switch rval.Type().Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
@@ -769,36 +806,51 @@ func isNil(rval reflect.Value) bool {
 	}
 }
 
-// Inefficient, but not a bottleneck. TODO improve.
-func typeName(rtype reflect.Type, packageMap map[string]string) string {
+func appendTypeName(out []byte, rtype reflect.Type, state state) []byte {
 	name := rtype.Name()
+
 	if name == "" {
 		switch rtype.Kind() {
 		case reflect.Array:
-			return "[" + strconv.Itoa(rtype.Len()) + "]" + typeName(rtype.Elem(), packageMap)
+			out = append(out, '[')
+			out = strconv.AppendInt(out, int64(rtype.Len()), 10)
+			out = append(out, ']')
+			out = appendTypeName(out, rtype.Elem(), state)
+			return out
 
 		case reflect.Slice:
-			return "[]" + typeName(rtype.Elem(), packageMap)
+			out = append(out, "[]"...)
+			out = appendTypeName(out, rtype.Elem(), state)
+			return out
 
 		case reflect.Map:
-			return "map[" + typeName(rtype.Key(), packageMap) + "]" + typeName(rtype.Elem(), packageMap)
+			out = append(out, "map["...)
+			out = appendTypeName(out, rtype.Key(), state)
+			out = append(out, ']')
+			out = appendTypeName(out, rtype.Elem(), state)
+			return out
 		}
-		return rtype.String()
+		return append(out, rtype.String()...)
 	}
 
 	pkg := rtype.PkgPath()
 	if pkg == "" {
-		return rtype.String()
+		return append(out, rtype.String()...)
 	}
 
-	pkg, ok := packageMap[pkg]
+	pkg, ok := state.conf.PackageMap[pkg]
 	if !ok {
-		return rtype.String()
+		return append(out, rtype.String()...)
 	}
+
 	if pkg == "" {
-		return name
+		return append(out, name...)
 	}
-	return pkg + "." + name
+
+	out = append(out, pkg...)
+	out = append(out, '.')
+	out = append(out, name...)
+	return out
 }
 
 // Questionable
@@ -835,4 +887,8 @@ func bytesToMutableString(bytes []byte) string {
 
 func isSfieldExported(sfield reflect.StructField) bool {
 	return sfield.PkgPath == ""
+}
+
+func canElideType(rtype reflect.Type, state state) bool {
+	return !state.conf.ForceConstructorName && !isInterface(rtype)
 }
