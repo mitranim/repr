@@ -236,7 +236,7 @@ func Println(val interface{}) (int, error) {
 Shortcut for `fmt.Println(repr.StringC(val, conf))`.
 */
 func PrintlnC(val interface{}, conf Config) (int, error) {
-	return fmt.Println(String(val))
+	return fmt.Println(StringC(val, conf))
 }
 
 var (
