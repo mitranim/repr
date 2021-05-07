@@ -79,6 +79,8 @@ ideally they would be printed as constructor calls.
 
 • Cyclic structures cause infinite recursion.
 
+• Doesn't support `fmt.GoStringer` yet.
+
 Note: pointers to composite types such as structs, arrays, slices and maps are
 supported by prefixing literals with "&", but Go currently doesn't support this
 for primitive literals.
@@ -113,11 +115,6 @@ Example:
 		String: "hello world!",
 		List: []int{10, 20, 30},
 	}
-
-Misc
-
-I'm receptive to suggestions. If this package almost satisfies you but needs
-changes, open an issue or chat me up. Contacts: https://mitranim.com/#contacts
 */
 package repr
 
