@@ -15,7 +15,7 @@ func ExampleString() {
 		List   []int
 	}
 
-	Println(Data{
+	_, _ = Println(Data{
 		Number: 123,
 		String: "hello world!",
 		List:   []int{10, 20, 30},
@@ -46,7 +46,7 @@ func TestDefault(t *testing.T) {
 }
 
 func TestSingleLine(t *testing.T) {
-	conf := Config{SingleLine: true}
+	conf := Config{}
 	actual := StringC(testStructure, conf)
 	expected := testOutputSingleLine
 	if actual != expected {
@@ -56,6 +56,7 @@ func TestSingleLine(t *testing.T) {
 
 func TestWithoutPackageName(t *testing.T) {
 	conf := Config{
+		Indent: Default.Indent,
 		PackageMap: map[string]string{
 			"github.com/mitranim/repr/test": "",
 		},
@@ -69,7 +70,6 @@ func TestWithoutPackageName(t *testing.T) {
 
 func TestSingleLineWithoutPackageName(t *testing.T) {
 	conf := Config{
-		SingleLine: true,
 		PackageMap: map[string]string{
 			"github.com/mitranim/repr/test": "",
 		},
@@ -83,6 +83,7 @@ func TestSingleLineWithoutPackageName(t *testing.T) {
 
 func TestRenamed(t *testing.T) {
 	conf := Config{
+		Indent: Default.Indent,
 		PackageMap: map[string]string{
 			"github.com/mitranim/repr/test": "renamed",
 		},
@@ -96,7 +97,6 @@ func TestRenamed(t *testing.T) {
 
 func TestSingleLineRenamed(t *testing.T) {
 	conf := Config{
-		SingleLine: true,
 		PackageMap: map[string]string{
 			"github.com/mitranim/repr/test": "renamed",
 		},
@@ -109,7 +109,10 @@ func TestSingleLineRenamed(t *testing.T) {
 }
 
 func TestZeroFields(t *testing.T) {
-	conf := Config{ZeroFields: true}
+	conf := Config{
+		Indent:     Default.Indent,
+		ZeroFields: true,
+	}
 	actual := StringC(testStructure, conf)
 	expected := testOutputWithZeroFields
 	if actual != expected {
