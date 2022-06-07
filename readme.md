@@ -1,3 +1,11 @@
+## MOVED 
+
+**Better up-to-date version: https://github.com/mitranim/gg/tree/main/grepr.**
+
+**This repository is now outdated and frozen.**
+
+----
+
 ## Overview
 
 Prints Go data structures as syntactically valid Go code. Useful for code generation. The name "repr" stands for "representation" and alludes to the Python function with the same name.
