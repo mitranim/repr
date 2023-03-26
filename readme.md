@@ -1,4 +1,4 @@
-## MOVED 
+## MOVED
 
 **Better up-to-date version: https://github.com/mitranim/gg/tree/main/grepr.**
 
